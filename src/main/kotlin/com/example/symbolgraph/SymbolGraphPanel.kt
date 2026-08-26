@@ -11,6 +11,7 @@ import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.Point
 import java.awt.RenderingHints
+import java.awt.geom.Path2D
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.JPanel
@@ -19,18 +20,22 @@ import javax.swing.JScrollPane
 class SymbolGraphPanel(private val project: Project, private val model: GraphModel) : JScrollPane() {
     init {
         viewport.view = GraphCanvas()
+        viewport.background = Color(0x12151B)
+        background = Color(0x12151B)
         border = null
     }
 
     private inner class GraphCanvas : JPanel() {
         private val nodeWidth = 210
         private val nodeHeight = 72
-        private val gapX = 100
+        private val gapX = 130
         private val gapY = 22
+        private val canvasPadding = 42
         private val positions = LinkedHashMap<GraphNode, Point>()
 
         init {
-            background = Color(0xF7F8FA)
+            background = Color(0x12151B)
+            isOpaque = true
             layoutNodes()
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(event: MouseEvent) {
@@ -44,11 +49,11 @@ class SymbolGraphPanel(private val project: Project, private val model: GraphMod
 
         private fun layoutNodes() {
             val rows = maxOf(1, model.usages.size)
-            val height = rows * (nodeHeight + gapY) + 80
-            preferredSize = Dimension(nodeWidth * 2 + gapX + 80, height)
-            positions[model.definition] = Point(30, (height - nodeHeight) / 2)
+            val height = rows * (nodeHeight + gapY) + canvasPadding * 2
+            preferredSize = Dimension(nodeWidth * 2 + gapX + canvasPadding * 2, height)
+            positions[model.definition] = Point(canvasPadding, (height - nodeHeight) / 2)
             model.usages.forEachIndexed { index, node ->
-                positions[node] = Point(nodeWidth + gapX + 50, 30 + index * (nodeHeight + gapY))
+                positions[node] = Point(nodeWidth + gapX + canvasPadding, canvasPadding + index * (nodeHeight + gapY))
             }
         }
 
@@ -56,42 +61,84 @@ class SymbolGraphPanel(private val project: Project, private val model: GraphMod
             super.paintComponent(graphics)
             val g = graphics.create() as Graphics2D
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED)
+            drawGrid(g)
             val source = positions[model.definition] ?: return
-            model.usages.forEach { usage ->
-                val target = positions[usage] ?: return@forEach
-                drawArrow(g, source.x + nodeWidth, source.y + nodeHeight / 2, target.x, target.y + nodeHeight / 2)
-            }
+            drawConnections(g, source)
             positions.forEach { (node, point) -> drawNode(g, node, point) }
             g.dispose()
         }
 
+        private fun drawGrid(g: Graphics2D) {
+            g.color = Color(0x1B2028)
+            g.stroke = BasicStroke(1f)
+            var x = 18
+            while (x < width) {
+                g.drawLine(x, 0, x, height)
+                x += 24
+            }
+            var y = 18
+            while (y < height) {
+                g.drawLine(0, y, width, y)
+                y += 24
+            }
+        }
+
+        private fun drawConnections(g: Graphics2D, source: Point) {
+            if (model.usages.isEmpty()) return
+            val sourceX = source.x + nodeWidth
+            val sourceY = source.y + nodeHeight / 2
+            val railX = sourceX + gapX / 2
+            val targets = model.usages.mapNotNull { positions[it] }
+            if (targets.isEmpty()) return
+
+            // Draw one shared trunk, then orthogonal branches to each usage node.
+            g.color = Color(0x657284)
+            g.stroke = BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            val trunk = Path2D.Double()
+            trunk.moveTo(sourceX.toDouble(), sourceY.toDouble())
+            trunk.lineTo(railX.toDouble(), sourceY.toDouble())
+            trunk.lineTo(railX.toDouble(), targets.minOf { it.y + nodeHeight / 2 }.toDouble())
+            trunk.lineTo(railX.toDouble(), targets.maxOf { it.y + nodeHeight / 2 }.toDouble())
+            g.draw(trunk)
+
+            targets.forEach { target ->
+                val targetY = target.y + nodeHeight / 2
+                val branch = Path2D.Double()
+                branch.moveTo(railX.toDouble(), targetY.toDouble())
+                branch.lineTo((target.x - 14).toDouble(), targetY.toDouble())
+                g.draw(branch)
+                drawArrowHead(g, target.x - 3, targetY)
+            }
+        }
+
         private fun drawNode(g: Graphics2D, node: GraphNode, point: Point) {
-            g.color = if (node.definition) Color(0xDCEBFF) else Color.WHITE
+            // A restrained dark palette keeps the graph readable while the red arrows stay prominent.
+            g.color = if (node.definition) Color(0x24344A) else Color(0x20252D)
             g.fillRoundRect(point.x, point.y, nodeWidth, nodeHeight, 8, 8)
-            g.color = if (node.definition) Color(0x2F6FEB) else Color(0xA8B1BE)
-            g.stroke = BasicStroke(if (node.definition) 2f else 1f)
+            g.color = if (node.definition) Color(0x4D9DFF) else Color(0x586575)
+            g.stroke = BasicStroke(if (node.definition) 2.2f else 1.2f)
             g.drawRoundRect(point.x, point.y, nodeWidth, nodeHeight, 8, 8)
-            g.color = Color(0x1F2328)
+            g.color = Color(0xF2F5F8)
             g.font = g.font.deriveFont(Font.BOLD, 13f)
             g.drawString(node.title.take(27), point.x + 12, point.y + 23)
             g.font = g.font.deriveFont(Font.PLAIN, 12f)
-            g.color = Color(0x57606A)
+            g.color = Color(0xB4BFCC)
             g.drawString(node.fileName.take(29), point.x + 12, point.y + 44)
-            g.color = Color(0x8C959F)
+            g.color = Color(0x7F8B9A)
             g.font = g.font.deriveFont(Font.PLAIN, 10f)
             g.drawString(if (node.definition) "definition" else "usage", point.x + 12, point.y + 61)
         }
 
-        private fun drawArrow(g: Graphics2D, x1: Int, y1: Int, x2: Int, y2: Int) {
-            g.color = Color(0x8C959F)
-            g.stroke = BasicStroke(1.4f)
-            g.drawLine(x1, y1, x2, y2)
-            val angle = kotlin.math.atan2((y2 - y1).toDouble(), (x2 - x1).toDouble())
-            val size = 8.0
-            val left = Point((x2 - size * kotlin.math.cos(angle - 0.45)).toInt(), (y2 - size * kotlin.math.sin(angle - 0.45)).toInt())
-            val right = Point((x2 - size * kotlin.math.cos(angle + 0.45)).toInt(), (y2 - size * kotlin.math.sin(angle + 0.45)).toInt())
-            g.drawLine(x2, y2, left.x, left.y)
-            g.drawLine(x2, y2, right.x, right.y)
+        private fun drawArrowHead(g: Graphics2D, tipX: Int, tipY: Int) {
+            val size = 8
+            val arrow = java.awt.Polygon(
+                intArrayOf(tipX, tipX - size, tipX - size),
+                intArrayOf(tipY, tipY - size / 2, tipY + size / 2),
+                3
+            )
+            g.color = Color(0xFF4D5F)
+            g.fillPolygon(arrow)
         }
 
         private fun openNode(node: GraphNode) {

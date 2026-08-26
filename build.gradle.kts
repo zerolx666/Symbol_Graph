@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.example.symbolgraph"
-version = "0.1.3"
+version = "0.1.5"
 
 // The project property is intentionally outside the repository so Rider/Gradle does not
 // fill the system drive with build outputs. Gradle's dependency cache is configured separately

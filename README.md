@@ -14,7 +14,7 @@ The ZIP containing this directory is a **source project**, not an installable pl
 
 To keep Rider's Gradle dependency cache off C:, set **Settings | Build, Execution, Deployment | Build Tools | Gradle | Gradle user home** to `D:\GradleUserHome\rider-symbol-graph` before importing or building.
 
-For a distributable plugin, run `build-off-c.ps1` from PowerShell. It sets `JAVA_HOME=D:\software\JDK21`, `GRADLE_USER_HOME=D:\GradleUserHome\rider-symbol-graph`, uses a project cache under `D:\GradleBuilds\rider-symbol-graph`, and writes build output there as well. Install `D:\GradleBuilds\rider-symbol-graph\distributions\rider-symbol-graph-0.1.1.zip` from that external directory. This release targets Rider 2026.1.x (build 261).
+For a distributable plugin, run `build-off-c.ps1` from PowerShell. It sets `JAVA_HOME=D:\software\JDK21`, `GRADLE_USER_HOME=D:\GradleUserHome\rider-symbol-graph`, uses a project cache under `D:\GradleBuilds\rider-symbol-graph`, and writes build output there as well. Install the generated `rider-symbol-graph-0.1.5.zip` from that external directory. This release targets Rider 2026.1.x (build 261).
 
 If the machine uses another data drive, edit the two paths in `build-off-c.ps1` and `gradle.properties`.
 
