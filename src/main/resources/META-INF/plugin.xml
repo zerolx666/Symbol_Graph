@@ -1,5 +1,6 @@
 <idea-plugin>
     <idea-version since-build="261" until-build="261.*" />
+    <version>0.1.6</version>
     <id>com.example.symbolgraph</id>
     <name>Symbol Graph</name>
     <vendor email="support@example.com">Symbol Graph</vendor>
