@@ -9,6 +9,9 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.rider</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Symbol Graph" anchor="right" factoryClass="com.example.symbolgraph.SymbolGraphToolWindowFactory" />
+    </extensions>
     <actions>
         <action id="SymbolGraph.Show" class="com.example.symbolgraph.SymbolGraphAction"
                 text="Show Symbol Graph" description="Show the definition and usages of the selected symbol">
