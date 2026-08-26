@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+build/
+out/
+*.iml
+
+# Keep only the released installable plugin package under dist/.
+!dist/
+!dist/rider-symbol-graph-0.1.4-plugin.zip

@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>com.example.symbolgraph</id>
+    <name>Symbol Graph</name>
+    <vendor email="support@example.com">Symbol Graph</vendor>
+    <description><![CDATA[
+        Visualize a selected variable or function definition and its usages as a navigable graph.
+    ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.rider</depends>
+    <actions>
+        <action id="SymbolGraph.Show" class="com.example.symbolgraph.SymbolGraphAction"
+                text="Show Symbol Graph" description="Show the definition and usages of the selected symbol">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt G"/>
+    <keyboard-shortcut keymap="VSCode" first-keystroke="ctrl alt G"/>
+        </action>
+    </actions>
+</idea-plugin>
